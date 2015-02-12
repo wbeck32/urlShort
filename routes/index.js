@@ -14,40 +14,41 @@ router.post('/', function(request, response) {
 	var db = app.get('mongo');
   var shortUrl = b62.encode(n());
   var timestamp = Date.now();
-  //retrieve number of clicks, increment by one
-  var numClicks = 2;
-
+  var numClicks = 0;
 	var collection = db.collection('url_shorten');
-  		collection.insert({ short : shortUrl, target : request.body.longURL, clicks : numClicks, lastClick : timestamp }, function(err, docs) {
-          //response.redirect('/data/');
+      collection.insert({ short : shortUrl, target : request.body.longURL, clicks : numClicks, lastClick : timestamp }, function(err, docs) {
       response.redirect('/data/' + shortUrl);
   	});
 });
 
 router.get('/data/:shortUrl', function(request, response) {
-//router.get('/data', function(request, response) {
-  console.log(response.params);
 	var db = app.get('mongo');
-  	var collection = db.collection('url_shorten');
-  	collection.find({ short : '' },{},function (e,docs){
-  		docs.toArray(function (err,data){
-  			console.log(data);
-  			response.render('data', { "data" : data });
-  		});
-        
-    });
-    //shortUrl = request.params.shortUrl;
-  	//collection.find({'shortened': shortUrl}, function(err, url) {
-    //response.render('data', {url: url});
-  //});
+	var collection = db.collection('url_shorten');
+  var su = request.params.shortUrl;
+	
+  collection.findOne({ short : su },{},function (e,docs){
+    docs.clicks = docs.clicks++;
+    
+    collection.update({ short: su },{ $set: {clicks:docs.clicks}}, function (e, data){
+     
+      collection.findOne({ short : su }, {},function (e, update){
+
+        collection.findOne({ _id : update._id }, {},function (e, mmm){
+          response.render('data', { "data" : mmm });
+        });       
+      });
+    }); 
+  });
 });
+ 
 
 router.get('/:shortUrl', function(request, response) {
-  //var collection = db.collection('urls'),
-  //    shortUrl = request.params.shortUrl;
-  //collection.find({'shortened': shortUrl}, function(err, url) {
-  //  response.redirect(url.target);
-  //});
+  var db = app.get('mongo');
+  var collection = db.collection('url_shorten');
+    shortUrl = request.params.shortUrl;
+    collection.findOne({short : shortUrl},{}, function(err, url) {
+      if (url){response.redirect(url.target);}
+  });
 });
 
 module.exports = router;
