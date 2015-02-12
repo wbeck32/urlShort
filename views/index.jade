@@ -1,0 +1,14 @@
+extends layout
+
+block content
+-var url = 'hum'
+    h1= 'Shorten your URLs'
+    div(class="URLform")
+        form(method='post', action='')
+            label(for='longURL') Enter the long url here:
+            input(type='text',name='longURL',id='longURL')
+            input(type='submit',name='submit',value='Submit').submit-button
+
+
+            div(class="newURL") 
+            a(href= url )
